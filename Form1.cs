@@ -148,7 +148,7 @@ namespace Calculator
             
             if (first_term != null)
             {
-                MessageBox.Show(sign.ToString() + " " + val.ToString());
+                //MessageBox.Show(sign.ToString() + " " + val.ToString());
                 if (sign != 0)
                 { // if the last sign wasn't equals then we resolve the operators
                     second_term = number;
@@ -158,21 +158,17 @@ namespace Calculator
                     if (val != 0) // if the current sign isn't equals then we chain the operators
                     {
                         first_term = output;
-                        output = null;
-                        displayNumber(0);
                     }
-                    else
-                    {
-                        
-                        displayNumber(output);
-                    }
-                    
+                    displayNumber(output);
                 }
                 else
                 {
-                    MessageBox.Show(output.ToString());
-                    if(val!=0)
+                    //MessageBox.Show(output.ToString());
+                    if (val != 0)
+                    {
                         first_term = output;
+                        second_term = null;
+                    }
                 }
                 //MessageBox.Show(sign.ToString() + " " + val.ToString());
             }
@@ -182,8 +178,9 @@ namespace Calculator
                     first_term = number;
                 else
                     first_term = output;
-                displayNumber(0);
+                
             }
+            
             label1.Text = first_term.ToString();
             label2.Text = second_term.ToString();
             label3.Text = output.ToString();
