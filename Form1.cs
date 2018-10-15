@@ -26,6 +26,7 @@ namespace Calculator
         private Nullable<double> second_term = null;
         private Nullable<double> output = null;
         private int sign = 0;
+        private bool startedTyping = false;
         private bool isFloat= false;
         private Nullable<double> number = 0;
        
@@ -54,7 +55,6 @@ namespace Calculator
              * fifth row   -> 1 , 2 , 3 , =
              * sixth row   -> % , 0 , . ,+-
              */
-
             InitializeComponent();
         }
 
@@ -64,13 +64,18 @@ namespace Calculator
             scapegoat.Hide();
             displayNumber(number);
         }
-
-        private void displayNumber(Nullable<double> numb)
+        int extraZeros = 0;
+        private void displayNumber(Nullable<double> number)
         {
-            if (numb < 0)
-                display.Text = (-1*numb).ToString() + "-";
-            else
-                display.Text = numb.ToString();
+            string text = number.ToString();
+            if (isFloat)
+            {
+                if (number == (int)number)
+                    text = text + ".";
+                for (int i = 1; i <= extraZeros; i++)
+                    text = text + "0";
+            }
+            display.Text = text;
         }
 
         private void richTextBox1_Enter(object sender, EventArgs e)
@@ -80,26 +85,40 @@ namespace Calculator
 
         int pow = 10;
         const double UPPER_LIMIT_DECIMALS = 100000;
-        private void enterNumber(object sender, EventArgs e)
+
+        private void modifyNumber(double val)
         {
-            Button clickedObj = (Button)sender;
-            double val = Convert.ToInt32((string)clickedObj.Tag);
-            //MessageBox.Show(sign.ToString());
-            
-            if (!isFloat){
+            if (isFloat && val == 0)
+                extraZeros++;
+            else
+                extraZeros = 0;
+
+            startedTyping = true;
+            output = null;
+
+            if (!isFloat)
+            {
                 if (number * 10 <= UPPER_LIMIT_DECIMALS)
                 {
-                    number = number * 10 + val;
+                    number = number * 10 + sgn(number) * val;
                 }
             }
-            else{
-                if (pow <= UPPER_LIMIT_DECIMALS){
+            else
+            {
+                if (pow <= UPPER_LIMIT_DECIMALS)
+                {
 
-                    number = number + val / pow;
+                    number = number + sgn(number) * val / pow;
                     pow = pow * 10;
                 }
             }
             displayNumber(number);
+        }
+        private void enterNumber(object sender, EventArgs e)
+        {
+            Button clickedObj = (Button)sender;
+            double val = Convert.ToInt32((string)clickedObj.Tag);
+            modifyNumber(val);    
         }
 
         private void buttonClearEntry_Click(object sender, EventArgs e)
@@ -109,12 +128,19 @@ namespace Calculator
             displayNumber(0);
         }
 
+        private int sgn(Nullable<double> value)
+        {
+            if (value < 0)
+                return -1;
+            else
+                return 1;
+        }
+
         private const int NEUTRAL_ADITION = 0;
         private const int NEUTRAL_MULTIPLICATION = 1;
-
+        
         private Nullable<double> resolve(Nullable<double> x, Nullable<double> y,int sign)
         {
-            
             switch ((operators)sign)
             {
                 case operators.PLUS:
@@ -134,9 +160,7 @@ namespace Calculator
                         y = NEUTRAL_MULTIPLICATION;
                     return x / y;
                 case operators.PERCENT:
-                    if (y == null)
-                        y = NEUTRAL_MULTIPLICATION;
-                    return (x / y * 100);
+                    return (x * 100);
                 default:
                     return null;
             }
@@ -145,53 +169,87 @@ namespace Calculator
         private void signPress(object sender, EventArgs e)
         {
             int val = Convert.ToInt32((string)((Button)sender).Tag);
-            
-            if (first_term != null)
+            pow = 10;
+            //MessageBox.Show(startedTyping.ToString());
+            if (startedTyping == true)
             {
-                //MessageBox.Show(sign.ToString() + " " + val.ToString());
-                if (sign != 0)
-                { // if the last sign wasn't equals then we resolve the operators
-                    second_term = number;
-                    output = resolve(first_term, second_term, sign);
-                    first_term = null;
-                    second_term = null;
-                    if (val != 0) // if the current sign isn't equals then we chain the operators
-                    {
-                        first_term = output;
-                    }
-                    displayNumber(output);
-                }
-                else
+                if (first_term == null)
                 {
-                    //MessageBox.Show(output.ToString());
-                    if (val != 0)
+                    first_term = number;
+                    displayNumber(0);
+                    if (val == 5)
                     {
-                        first_term = output;
+                        output = resolve(first_term, second_term, sign);
+                        displayNumber(output);
+                        number = 0;
+                        first_term = null;
                         second_term = null;
                     }
                 }
-                //MessageBox.Show(sign.ToString() + " " + val.ToString());
+                else
+                {
+                    second_term = number;
+                    output = resolve(first_term, second_term, sign);
+                    displayNumber(output);
+                    number = 0;
+                    first_term = null;
+                    second_term = null;
+                    if (val != 0)
+                    {
+                        first_term = output;
+                    }
+                }
             }
             else
             {
-                if (output == null)
-                    first_term = number;
-                else
+                if (output != null)
+                {
                     first_term = output;
-                
+                    output = null;
+                }
             }
-            
             label1.Text = first_term.ToString();
             label2.Text = second_term.ToString();
             label3.Text = output.ToString();
             number = 0;
+            extraZeros = 0;
+            isFloat = false;
+            startedTyping = false;
             sign = val;
         }
 
         private void buttonChangeSign_Click(object sender, EventArgs e)
         {
+            if (!startedTyping && output!= null)
+            {
+                startedTyping = true;
+                number = output;   
+            }
             number = -number;
             displayNumber(number);
+        }
+
+        private void buttonDecimal_Click(object sender, EventArgs e)
+        {
+            if (!startedTyping && output != null)
+            {
+                startedTyping = true;
+                number = output;
+            }
+            if (!isFloat)
+            {
+                isFloat = true;
+                displayNumber(number);
+            }
+        }
+
+        private void display_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
+            {
+                int val = (int)e.KeyCode-48;
+                modifyNumber(val);
+            }
         }
     }
 }
