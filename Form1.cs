@@ -61,7 +61,6 @@ namespace Calculator
         private void Form1_Load(object sender, EventArgs e)
         {
             display.ReadOnly = true;
-            scapegoat.Hide();
             displayNumber(number);
         }
         int extraZeros = 0;
@@ -76,11 +75,6 @@ namespace Calculator
                     text = text + "0";
             }
             display.Text = text;
-        }
-
-        private void richTextBox1_Enter(object sender, EventArgs e)
-        {
-            scapegoat.Select();
         }
 
         int pow = 10;
@@ -179,8 +173,10 @@ namespace Calculator
                     displayNumber(0);
                     if (val == 5)
                     {
+                        sign = val;
                         output = resolve(first_term, second_term, sign);
                         displayNumber(output);
+                        //displayNumber(first_term*100);
                         number = 0;
                         first_term = null;
                         second_term = null;
@@ -206,11 +202,18 @@ namespace Calculator
                 {
                     first_term = output;
                     output = null;
+                    if (val == 5)
+                    {
+                        sign = val;
+                        output = resolve(first_term, second_term, sign);
+                        displayNumber(output);
+                        //displayNumber(first_term*100);
+                        number = 0;
+                        first_term = null;
+                        second_term = null;
+                    }
                 }
             }
-            label1.Text = first_term.ToString();
-            label2.Text = second_term.ToString();
-            label3.Text = output.ToString();
             number = 0;
             extraZeros = 0;
             isFloat = false;
